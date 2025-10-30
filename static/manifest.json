@@ -1,0 +1,53 @@
+{
+    "name": "Grafik Firmowy",
+    "short_name": "Grafik",
+    "description": "Aplikacja do zarządzania grafikiem zleceń i zapisami pracowników.",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#f4f6f9",
+    "theme_color": "#d35400",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "https://placehold.co/72x72/d35400/FFFFFF?text=G",
+            "type": "image/png",
+            "sizes": "72x72"
+        },
+        {
+            "src": "https://placehold.co/96x96/d35400/FFFFFF?text=G",
+            "type": "image/png",
+            "sizes": "96x96"
+        },
+        {
+            "src": "https://placehold.co/128x128/d35400/FFFFFF?text=G",
+            "type": "image/png",
+            "sizes": "128x128"
+        },
+        {
+            "src": "https://placehold.co/144x144/d35400/FFFFFF?text=G",
+            "type": "image/png",
+            "sizes": "144x144"
+        },
+        {
+            "src": "https://placehold.co/152x152/d35400/FFFFFF?text=G",
+            "type": "image/png",
+            "sizes": "152x152"
+        },
+        {
+            "src": "https://placehold.co/192x192/d35400/FFFFFF?text=G",
+            "type": "image/png",
+            "sizes": "192x192",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "https://placehold.co/384x384/d35400/FFFFFF?text=G",
+            "type": "image/png",
+            "sizes": "384x384"
+        },
+        {
+            "src": "https://placehold.co/512x512/d35400/FFFFFF?text=G",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ]
+}
