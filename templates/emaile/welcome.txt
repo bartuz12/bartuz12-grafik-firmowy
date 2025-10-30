@@ -1,0 +1,8 @@
+Witaj, {{ user.name }}!
+
+Dziękujemy za rejestrację w aplikacji Grafik.
+
+Twoje konto zostało pomyślnie utworzone. Możesz teraz zalogować się i przeglądać dostępne zlecenia.
+
+--
+To jest wiadomość automatyczna. Prosimy na nią nie odpowiadać

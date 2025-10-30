@@ -1,0 +1,13 @@
+Lista uczestników na zlecenie: {{ trip.title }}
+Data: {{ trip.trip_date.strftime('%d.%m.%Y') }}
+
+Poniżej znajduje się lista osób na zlecenie:
+
+{% for signup in signups %}
+
+{{ signup.user.name }} {{ signup.user.surname }} (Agencja: {{ signup.user.agency }}) - Status: {{ signup.status }}
+{% else %}
+Brak zapisanych osób.
+{% endfor %}
+
+Wiadomość wygenerowana automatycznie z aplikacji Grafik
