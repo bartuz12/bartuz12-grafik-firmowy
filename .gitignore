@@ -1,0 +1,46 @@
+Środowisko Wirtualne
+
+venv/
+.venv/
+env/
+
+Pliki systemowe
+
+.DS_Store
+*.pyc
+pycache/
+
+Pliki konfiguracyjne i sekrety
+
+.env
+*.env
+config.pyc
+
+Baza danych SQLite i migracje
+
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+Logi
+
+logs/
+*.log
+
+Raporty Pytest
+
+.pytest_cache/
+htmlcov/
+.coverage
+
+Pliki IDE
+
+.vscode/
+.idea/
+
+Foldery cache narzędzi
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

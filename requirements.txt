@@ -1,0 +1,26 @@
+--- Główne zależności frameworka ---
+
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-Mail==0.10.0
+Flask-WTF==1.2.1
+
+--- Baza Danych i Migracje ---
+
+Flask-Migrate==4.0.7
+psycopg2-binary==2.9.9
+
+--- Zadania w tle (Asynchroniczne) ---
+
+Flask-RQ2==18.3
+redis==5.0.7
+
+--- Serwer Produkcyjny ---
+
+gunicorn==22.0.0
+
+--- Konfiguracja i Narzędzia ---
+
+python-dotenv==1.0.1
+pandas
