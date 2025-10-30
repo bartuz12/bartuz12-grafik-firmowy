@@ -1,0 +1,232 @@
+{% extends "layout.html" %}
+
+{% block title %}Rozliczenia i Planowanie{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .filter-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: flex-end;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--background-color);
+    }
+    .filter-controls .form-group {
+        flex-grow: 1;
+        margin-bottom: 0;
+    }
+    .filter-controls .button-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .settlements-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+    }
+    .settlements-table thead th {
+        text-align: left;
+        padding: 12px;
+        border-bottom: 2px solid var(--dark-gray);
+        position: sticky; 
+        /* --- POPRAWKA: Ustawiono top na 0 --- */
+        /* To sprawi, że nagłówek przyklei się do górnej krawędzi przewijanego kontenera tabeli */
+        top: 0; 
+        background: var(--card-bg);
+        font-size: 0.9em;
+        z-index: 5; 
+    }
+    .settlements-table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+    }
+    .settlements-table tbody tr:nth-child(even) {
+        background-color: var(--background-color);
+    }
+    .settlements-table td {
+        padding: 8px 12px;
+        vertical-align: middle;
+    }
+    .settlements-table .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 0.9em;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background-color: var(--input-bg);
+        color: var(--text-color);
+    }
+    .settlements-table input[type="time"] { min-width: 100px; }
+    .settlements-table input[type="number"] { min-width: 70px; max-width: 80px; }
+    .settlements-table .form-check-input { width: 1.25rem; height: 1.25rem; cursor: pointer; }
+    .submit-container {
+        position: sticky;
+        bottom: 0;
+        background-color: var(--card-bg);
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+        text-align: right;
+        z-index: 10;
+    }
+    .na-cell {
+        color: var(--secondary-color);
+        font-size: 0.9em;
+        text-align: center;
+        padding: 12px;
+    }
+    .table-container {
+        max-height: 70vh; 
+        overflow-y: auto; 
+        overflow-x: auto;
+    }
+    .past-trips-card {
+        margin-top: 2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- FORMULARZ FILTROWANIA -->
+<div class="card">
+    <div class="card-header" style="padding-bottom: 0.5rem;">
+        <h4>Filtry (dla bieżącego roku)</h4>
+    </div>
+    <div class="filter-controls">
+        <form method="GET" action="{{ url_for('admin.settlements') }}" style="display: contents;">
+            <div class="form-group">
+                <label for="search_text">Filtruj po nazwie:</label>
+                <input type="text" id="search_text" name="search_text" class="form-control" placeholder="Wpisz nazwę zlecenia..." value="{{ filters.search_text or '' }}">
+            </div>
+            <div class="form-group" style="min-width: 150px;">
+                <label for="search_month">Miesiąc:</label>
+                <select id="search_month" name="search_month" class="form-control">
+                    <option value="">Bieżący rok (Wszystkie)</option>
+                    {% set months = ['Styczeń', 'Luty', 'Marzec', 'Kwiecień', 'Maj', 'Czerwiec', 'Lipiec', 'Sierpień', 'Wrzesień', 'Październik', 'Listopad', 'Grudzień'] %}
+                    {% for i in range(1, 13) %}
+                        <option value="{{ i }}" {% if filters.search_month == i|string %}selected{% endif %}>{{ months[i-1] }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="button button-primary">Filtruj</button>
+                <a href="{{ url_for('admin.settlements') }}" class="button button-secondary">Resetuj</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- FORMULARZ EDYCJI DANYCH (jeden formularz obejmujący obie tabele) -->
+<form method="POST" action="{{ url_for('admin.settlements', **request.args) }}">
+    
+    <!-- TABELA 1: ZLECENIA PRZYSZŁE -->
+    <div class="card">
+        <div class="card-header">
+            <h1>Zlecenia Przyszłe (Planowanie)</h1>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table class="settlements-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Zlecenie</th>
+                            <th>Start (Plan)</th>
+                            <th>Wyjazd (Plan)</th>
+                            <th>Miejsca</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trip in future_trips %}
+                        <tr>
+                            <td>{{ trip.trip_date.strftime('%d.%m.%Y') }}</td>
+                            <td>{{ trip.title }}</td>
+                            <td>
+                                <input type="time" name="start_time-{{ trip.id }}" class="form-control" value="{{ trip.start_time.strftime('%H:%M') if trip.start_time else '' }}">
+                            </td>
+                            <td>
+                                <input type="time" name="departure_time-{{ trip.id }}" class="form-control" value="{{ trip.departure_time.strftime('%H:%M') if trip.departure_time else '' }}">
+                            </td>
+                            <td>
+                                <input type="number" name="spots-{{ trip.id }}" class="form-control" min="1" max="7" value="{{ trip.spots or '1' }}">
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 2rem;">
+                                {% if filters.search_text or filters.search_month %}
+                                    Brak przyszłych zleceń pasujących do filtrów.
+                                {% else %}
+                                    Brak aktywnych zleceń do zaplanowania.
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABELA 2: ZLECENIA PRZESZŁE -->
+    <div class="card past-trips-card">
+        <div class="card-header">
+            <h1>Zlecenia Przeszłe (Rozliczenia)</h1>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div class="table-container">
+                <table class="settlements-table">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Zlecenie</th>
+                            <th>Praca Od (Real)</th>
+                            <th>Praca Do (Real)</th>
+                            <th>Kilometry</th>
+                            <th>Pasażer</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trip in past_trips %}
+                        <tr>
+                            <td>{{ trip.trip_date.strftime('%d.%m.%Y') }}</td>
+                            <td>{{ trip.title }}</td>
+                            <td>
+                                <input type="time" name="work_start-{{ trip.id }}" class="form-control" value="{{ trip.work_start_time.strftime('%H:%M') if trip.work_start_time else '' }}">
+                            </td>
+                            <td>
+                                <input type="time" name="work_end-{{ trip.id }}" class="form-control" value="{{ trip.work_end_time.strftime('%H:%M') if trip.work_end_time else '' }}">
+                            </td>
+                            <td>
+                                <input type="number" step="0.1" name="km-{{ trip.id }}" class="form-control" value="{{ trip.kilometers if trip.kilometers is not none else '' }}">
+                            </td>
+                            <td>
+                                <input type="checkbox" name="passenger-{{ trip.id }}" class="form-check-input" {% if trip.manager_was_passenger %}checked{% endif %}>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem;">
+                                {% if filters.search_text or filters.search_month %}
+                                    Brak przeszłych zleceń pasujących do filtrów.
+                                {% else %}
+                                    Brak zleceń do rozliczenia.
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="submit-container">
+        <button type="submit" class="button button-primary">Zapisz wszystkie zmiany</button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+{% set effective_theme = current_user.theme if current_user.is_authenticated else 'default' %}
+{% set theme_class = 'theme-default' %}
+{% set custom_color = '' %}
+
+{% if effective_theme.endswith('_dark') %}
+    {% set theme_class = 'theme-dark' %}
+    {% set color_part = effective_theme.split('_dark')[0] %}
+    {% if color_part.startswith('#') %}
+        {% set custom_color = color_part %}
+    {% endif %}
+{% elif effective_theme.startswith('#') %}
+    {% set theme_class = 'theme-default' %}
+    {% set custom_color = effective_theme %}
+{% elif effective_theme == 'default' %}
+    {% set theme_class = 'theme-default' %}
+{% endif %}
+
+<html lang="pl" class="{{ theme_class }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Grafik{% endblock %} - Grafik Firmowy</title>
+
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#d35400"/>
+
+    <!-- Główny arkusz stylów -->
+    <!-- === POPRAWKA CACHE-BUSTING (AUDYT 3.2) === -->
+    <link rel="stylesheet" href="{{ url_for_static_bust('css/style.css') }}"> <!-- Ta linia używa funkcji globalnej -->
+    <!-- === KONIEC POPRAWKI === -->
+
+
+    <!-- Czcionki z Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Frijole&display=swap" rel="stylesheet">
+
+    {# Obsługa niestandardowego koloru #}
+    {% if custom_color %}
+    <style>
+        :root {
+            --primary-color: {{ custom_color }};
+        }
+        .navbar {
+             background-image: linear-gradient(to right, color-mix(in srgb, {{ custom_color }} 85%, #000), {{ custom_color }});
+        }
+    </style>
+    {% endif %}
+
+    {% block extra_styles %}{% endblock %}
+</head>
+<body class="{{ theme_class }}"> <!-- Klasa body jest dynamicznie ustawiana -->
+
+    {% if current_user.is_authenticated %}
+    <header class="navbar">
+        <div class="navbar-container">
+            <!-- Logo linkuje do dashboardu -->
+            <a href="{{ url_for('main.dashboard') }}" class="navbar-brand">Grafik</a>
+
+            <div class="navbar-right">
+                <nav class="nav-links">
+                    <ul>
+                        <!-- POPRAWKA: Usunięto zduplikowany link "Panel Główny" -->
+                        {% if current_user.status in ['admin', 'kierownik'] %}
+                            <li><a href="{{ url_for('admin.users') }}" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Użytkownicy</span></a></li>
+                            <li><a href="{{ url_for('admin.settlements') }}" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><span>Rozliczenia</span></a></li>
+                            <li><a href="{{ url_for('trips.add_trip') }}" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Dodaj Zlecenie</span></a></li>
+                            <li><a href="{{ url_for('admin.import_excel') }}" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Import</span></a></li>
+                            <li><a href="{{ url_for('admin.archive') }}" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg><span>Archiwum</span></a></li>
+                        {% endif %}
+                        {% if current_user.agency and current_user.agency.upper() == 'DPL' %}
+                            <li><a href="{{ url_for('admin.export_excel') }}" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Eksport</span></a></li>
+                        {% endif %}
+
+                        <!-- Linki mobilne (Mój Profil i Wyloguj) są teraz w liście ul, ale ukryte na desktopie -->
+                        <li class="nav-link-mobile"><a href="{{ url_for('main.profile') }}" class="nav-link"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Mój Profil</span></a></li>
+                        <li class="nav-link-mobile"><a href="{{ url_for('auth.logout') }}" class="nav-link logout-link"><svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Wyloguj się</span></a></li>
+                    </ul>
+                </nav>
+
+                <div class="user-menu">
+                    <button class="user-menu-trigger" aria-label="Menu użytkownika">
+                        <span class="user-avatar">{{ current_user.name[0] }}</span>
+                        <span class="user-name">{{ current_user.name }}</span>
+                        <svg class="chevron-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="user-dropdown-menu">
+                        <a href="{{ url_for('main.profile') }}" class="dropdown-item">Mój Profil</a>
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ url_for('auth.logout') }}" class="dropdown-item dropdown-item-danger">Wyloguj się</a>
+                    </div>
+                </div>
+                <button class="hamburger-menu" aria-label="Otwórz menu">
+                    <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+    {% endif %}
+
+    <!-- === POPRAWKA (BŁĄD TESTU) === -->
+    <!-- Przeniesiono blok komunikatów flash TUTAJ, -->
+    <!-- aby był renderowany na KAŻDEJ stronie, również na stronie logowania. -->
+    <div class="container flash-container"> <!-- Dodano kontener dla lepszego stylowania -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="flash-{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+    </div>
+    <!-- === KONIEC POPRAWKI === -->
+
+    <main class="container">
+        <!-- Usunięto stąd blok flash -->
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <!-- === POPRAWKA UTC === -->
+        <!-- Używamy zmiennej 'current_year' z context processora, a nie 'now()' -->
+        &copy; {{ current_year }} Grafik. Wszelkie prawa zastrzeżone.
+        <!-- === KONIEC POPRAWKI === -->
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hamburger = document.querySelector('.hamburger-menu');
+            const navLinks = document.querySelector('.nav-links');
+            const userMenuTrigger = document.querySelector('.user-menu-trigger');
+            const userDropdown = document.querySelector('.user-dropdown-menu');
+
+            if (hamburger) {
+                hamburger.addEventListener('click', () => {
+                    navLinks.classList.toggle('active');
+                });
+            }
+
+            if (userMenuTrigger) {
+                userMenuTrigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('active');
+                });
+
+                window.addEventListener('click', function(e){
+                    if (userDropdown && !userMenuTrigger.contains(e.target) && !userDropdown.contains(e.target)){
+                        userDropdown.classList.remove('active');
+                    }
+                });
+            }
+
+            // Podświetlanie aktywnego linku w nawigacji
+            const currentPath = window.location.pathname;
+            const dashboardLink = "{{ url_for('main.dashboard') }}";
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                const linkPath = link.getAttribute('href');
+                // Specjalne traktowanie dla dashboardu (tylko dokładne dopasowanie)
+                if (linkPath === dashboardLink && currentPath === dashboardLink) {
+                    link.classList.add('active');
+                }
+                // Inne linki (sprawdzenie, czy ścieżka zaczyna się od linku)
+                else if (linkPath !== dashboardLink && currentPath.startsWith(linkPath)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        // Rejestracja Service Worker (jeśli istnieje)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register("{{ url_for('static', filename='service-worker.js') }}")
+                    .then(reg => console.log('Service worker zarejestrowany.'))
+                    .catch(err => console.log('Błąd rejestracji service workera: ', err));
+            });
+        }
+    </script>
+</body>
+</html>
+

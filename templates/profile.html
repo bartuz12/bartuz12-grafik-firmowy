@@ -1,0 +1,260 @@
+{% extends "layout.html" %}
+
+{% block title %}Mój Profil{% endblock %}
+
+{% block extra_styles %}
+<style>
+    /* Układ siatki dla strony profilu */
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        align-items: start;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    @media (min-width: 640px) {
+        .info-grid {
+            grid-template-columns: 1fr 1fr; /* Dwie kolumny na większych ekranach */
+        }
+    }
+    .info-item strong {
+        display: block;
+        color: var(--secondary-color);
+        font-size: 0.9em;
+        margin-bottom: 0.25rem;
+    }
+    .info-item span {
+        font-size: 1.1em;
+        font-weight: 500;
+    }
+    .settings-container {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    .settings-section {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+    }
+    .settings-section .card-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background-color: var(--background-color);
+    }
+    .settings-section .card-header h3 { margin: 0; font-size: 1.3rem; }
+    .settings-section .card-body { padding: 1.5rem; }
+
+    /* Zarządzanie odbiorcami */
+    .recipient-list { list-style: none; padding-left: 0; margin-top: 1rem; }
+    .recipient-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .recipient-list li:last-child { border-bottom: none; }
+    .recipient-list .button-danger { padding: 0.4rem 0.8rem; font-size: 0.8em; }
+
+    /* Selektor motywów */
+    .theme-selector { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+    .theme-option { cursor: pointer; }
+    .theme-option input[type="radio"] { display: none; }
+    .theme-option .theme-name {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        border: 2px solid var(--border-color);
+        transition: all 0.2s;
+        display: block;
+        background-color: var(--background-color);
+    }
+    .theme-option input[type="radio"]:checked + .theme-name {
+        background-color: var(--primary-color);
+        color: var(--white);
+        border-color: var(--primary-color);
+        font-weight: 600;
+    }
+    #custom-theme-options input[type="color"] {
+        width: 100px; height: 40px; padding: 0.2rem;
+        border: 2px solid var(--border-color);
+        border-radius: 6px; cursor: pointer;
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+    .form-check-label {
+        margin-bottom: 0;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-grid">
+    
+    <!-- Kolumna z informacjami o użytkowniku -->
+    <div class="profile-info-card card">
+        <div class="card-header">
+            <h1>Twoje Dane</h1>
+        </div>
+        <div class="card-body">
+            <div class="info-grid">
+                <div class="info-item"><strong>Imię i Nazwisko:</strong> <span>{{ current_user.name }} {{ current_user.surname }}</span></div>
+                <div class="info-item"><strong>Adres e-mail:</strong> <span>{{ current_user.email }}</span></div>
+                <div class="info-item"><strong>Status:</strong> <span>{{ current_user.status }}</span></div>
+                <div class="info-item"><strong>Agencja:</strong> <span>{{ current_user.agency }}</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kolumna z ustawieniami -->
+    <div class="settings-container">
+
+        <!-- NOWA SEKCJA PERSONALIZACJI -->
+        <div class="settings-section">
+            <div class="card-header"><h3>Personalizacja Wyglądu</h3></div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('main.change_theme') }}">
+                    <div class="form-group">
+                        <label>Wybierz motyw</label>
+                        <div class="theme-selector">
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="default" {% if current_user.theme == 'default' %}checked{% endif %}>
+                                <span class="theme-name">Domyślny</span>
+                            </label>
+                            <label class="theme-option">
+                                <input type="radio" name="theme" value="custom" {% if current_user.theme != 'default' %}checked{% endif %}>
+                                <span class="theme-name">Własny</span>
+                            </label>
+                        </div>
+                        
+                        <!-- Ustalanie wartości dla formularza (na podstawie logiki z main.py) -->
+                        {% set is_dark = current_user.theme.endswith('_dark') %}
+                        {% set custom_color = current_user.theme.split('_dark')[0] %}
+                        {% if not custom_color.startswith('#') %}{% set custom_color = '#d35400' %}{% endif %}
+
+                        <div id="custom-theme-options" style="margin-top: 1.5rem; {% if current_user.theme == 'default' %}display: none;{% endif %}">
+                            <div class="form-group">
+                                <label for="custom_theme_color">Wybierz swój kolor:</label>
+                                <input type="color" id="custom_theme_color" name="custom_theme_color" value="{{ custom_color }}">
+                            </div>
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="custom_dark_mode" name="custom_dark_mode" {% if is_dark %}checked{% endif %}>
+                                <label class="form-check-label" for="custom_dark_mode">Włącz tryb ciemny</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="button button-primary">Zapisz motyw</button>
+                </form>
+            </div>
+        </div>
+
+        {% if current_user.status in ['admin', 'kierownik'] %}
+        <div class="settings-section">
+            <div class="card-header"><h3>Zarządzaj listą odbiorców (Biuro)</h3></div>
+            <div class="card-body">
+                <p>Dodaj adresy e-mail, na które będą wysyłane listy uczestników zleceń.</p>
+                <form method="POST" action="{{ url_for('main.add_recipient') }}" style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+                    <input type="email" name="email" class="form-control" placeholder="nowy.adres@email.com" required style="flex-grow: 1;">
+                    <button type="submit" class="button button-primary">Dodaj</button>
+                </form>
+                {% if recipients %}
+                    <h4>Aktualna lista odbiorców:</h4>
+                    <ul class="recipient-list">
+                        {% for recipient in recipients %}
+                        <li>
+                            <span>{{ recipient.email }}</span>
+                            <form method="POST" action="{{ url_for('main.delete_recipient', recipient_id=recipient.id) }}">
+                                <button type="submit" class="button button-danger">Usuń</button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>Lista odbiorców jest pusta.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="settings-section">
+            <div class="card-header"><h3>Zmień swoją agencję</h3></div>
+            <div class="card-body">
+                 <form method="POST" action="{{ url_for('main.change_agency') }}" class="form-inline" style="display: flex; gap: 10px; align-items: center;">
+                    <select id="agency" name="agency" class="form-control" required style="flex-grow: 1;">
+                        <option value="DPL" {% if current_user.agency == 'DPL' %}selected{% endif %}>DPL</option>
+                        <option value="JMG" {% if current_user.agency == 'JMG' %}selected{% endif %}>JMG</option>
+                        <option value="SJ" {% if current_user.agency == 'SJ' %}selected{% endif %}>SJ</option>
+                        <option value="WP" {% if current_user.agency == 'WP' %}selected{% endif %}>WP</option>
+                    </select>
+                    <button type="submit" class="button button-primary">Zapisz</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="card-header"><h3>Zmień hasło</h3></div>
+            <div class="card-body">
+                 <!-- POPRAWKA: Używamy obiektu form dla ChangePasswordForm -->
+                 <form method="POST" action="{{ url_for('main.change_password') }}">
+                    {{ password_form.hidden_tag() }} <!-- DODANIE OCHRONY CSRF -->
+                    <div class="form-group">
+                        {{ password_form.old_password.label }}
+                        {{ password_form.old_password(class="form-control", required=True) }}
+                    </div>
+                    <div class="form-group">
+                        {{ password_form.new_password.label }}
+                        {{ password_form.new_password(class="form-control", required=True, minlength=8) }}
+                    </div>
+                    <div class="form-group">
+                        {{ password_form.confirm_password.label }}
+                        {{ password_form.confirm_password(class="form-control", required=True, minlength=8) }}
+                    </div>
+                    <button type="submit" class="button button-primary">Zmień hasło</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // --- Logika dla przełącznika motywów ---
+    const themeRadios = document.querySelectorAll('input[name="theme"]');
+    const customThemeRadio = document.querySelector('input[value="custom"]');
+    const customOptions = document.getElementById('custom-theme-options');
+
+    if (themeRadios.length && customOptions) {
+        function toggleCustomOptions() {
+            if (customThemeRadio.checked) {
+                customOptions.style.display = 'block';
+            } else {
+                customOptions.style.display = 'none';
+            }
+        }
+        
+        themeRadios.forEach(radio => {
+            radio.addEventListener('change', toggleCustomOptions);
+        });
+        
+        // Wykonaj raz przy ładowaniu strony, aby stan był poprawny
+        toggleCustomOptions();
+    }
+});
+</script>
+{% endblock %}

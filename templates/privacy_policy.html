@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Polityka Prywatności{% endblock %}
+
+{% block extra_styles %}
+<style>
+    /* Style specyficzne dla strony polityki prywatności */
+    .privacy-container {
+        max-width: 800px;
+        margin: 2rem auto;
+    }
+    .privacy-content h2 {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color);
+        padding-bottom: 0.5rem;
+        margin-top: 2.5rem;
+        font-size: 1.5rem;
+    }
+    .privacy-content h2:first-of-type {
+        margin-top: 0;
+    }
+    .privacy-content p, .privacy-content li {
+        color: var(--secondary-color);
+        line-height: 1.7;
+    }
+    .privacy-content strong {
+        color: var(--text-color);
+    }
+    .privacy-content ul {
+        list-style-type: disc;
+        padding-left: 25px;
+    }
+    .privacy-content li {
+        margin-bottom: 0.75rem;
+    }
+    .footer-action {
+        text-align: center;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="privacy-container">
+    <div class="card">
+        <div class="card-header">
+            <h1>Polityka Prywatności Aplikacji "Grafik"</h1>
+        </div>
+        <div class="card-body privacy-content">
+            <p><strong>Data ostatniej aktualizacji:</strong> 19 października 2025</p>
+
+            <h2>1. Administrator Danych</h2>
+            <p>Administratorem Twoich danych osobowych jest Administrator aplikacji "Grafik", odpowiedzialny za jej funkcjonowanie.</p>
+
+            <h2>2. Jakie dane zbieramy?</h2>
+            <p>W celu świadczenia usług, aplikacja zbiera następujące dane osobowe podawane przez Ciebie podczas procesu rejestracji:</p>
+            <ul>
+                <li>Imię i nazwisko</li>
+                <li>Adres e-mail</li>
+                <li>Nazwa agencji</li>
+            </ul>
+            <p>Dodatkowo, system przechowuje informacje o Twoich zapisach (oraz ich statusie) na poszczególne zlecenia dostępne w grafiku.</p>
+
+            <h2>3. W jakim celu przetwarzamy Twoje dane?</h2>
+            <p>Twoje dane są przetwarzane wyłącznie w celu prawidłowego funkcjonowania aplikacji, a w szczególności do:</p>
+            <ul>
+                <li>Umożliwienia Ci logowania i korzystania z funkcjonalności aplikacji (przeglądania grafiku, zapisywania się na zlecenia).</li>
+                <li>Wysyłania automatycznych powiadomień e-mail dotyczących kluczowych zdarzeń na Twoim koncie (np. potwierdzenie rejestracji, informacje o nowych zleceniach, reset hasła).</li>
+                <li>Identyfikacji Cię na listach zapisów na poszczególne zlecenia.</li>
+            </ul>
+            
+            <h2>4. Twoje Prawa (zgodnie z RODO)</h2>
+            <p>Masz pełne prawo do kontroli nad swoimi danymi. W szczególności przysługuje Ci prawo do:</p>
+            <ul>
+                <li><strong>Dostępu do swoich danych:</strong> W każdej chwili możesz zobaczyć swoje dane w zakładce "Mój Profil".</li>
+                <li><strong>Sprostowania swoich danych:</strong> W przypadku błędu w danych, skontaktuj się z administratorem.</li>
+                <li><strong>Usunięcia danych ("prawo do bycia zapomnianym"):</strong> Możesz zażądać usunięcia swojego konta i wszystkich powiązanych z nim danych.</li>
+                <li><strong>Ograniczenia przetwarzania.</strong></li>
+            </ul>
+            <p>W celu realizacji tych praw, skontaktuj się z administratorem aplikacji.</p>
+
+            <h2>5. Bezpieczeństwo Danych</h2>
+            <p>Priorytetem jest dla nas bezpieczeństwo Twoich informacji. Stosujemy odpowiednie środki techniczne i organizacyjne, aby chronić Twoje dane. Twoje hasło jest przechowywane w bezpiecznej, zaszyfrowanej formie (jako hash) i nikt, łącznie z administratorem, nie ma dostępu do jego oryginalnej postaci.</p>
+            
+            <div class="footer-action">
+                <!-- POPRAWKA: 'register' zmienione na 'auth.register' -->
+                <a href="{{ url_for('auth.register') }}" class="button button-secondary">Powrót do Rejestracji</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

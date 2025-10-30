@@ -1,0 +1,154 @@
+{% extends "layout.html" %}
+
+{% block title %}Rejestracja - Stwórz Nowe Konto{% endblock %}
+
+{% block extra_styles %}
+<style>
+    /* Style spójne ze stronami uwierzytelniania */
+    .auth-layout {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 150px);
+        padding: 1rem;
+    }
+    .auth-card {
+        max-width: 500px;
+        width: 100%;
+    }
+    .card-footer-auth {
+        padding: 1rem 1.5rem;
+        background-color: var(--background-color);
+        border-top: 1px solid var(--border-color);
+        text-align: center;
+        font-size: 0.9em;
+    }
+    .card-footer-auth a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .card-footer-auth a:hover {
+        text-decoration: underline;
+    }
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    .password-hint {
+        font-size: 0.875rem;
+        color: var(--secondary-color);
+        margin-top: 0.5rem;
+        display: none;
+        padding-left: 0.25rem;
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1.5rem 0;
+    }
+    .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        flex-shrink: 0;
+    }
+    .form-check-label {
+        margin: 0;
+        color: var(--secondary-color);
+    }
+    .form-check-label a {
+        font-weight: 600;
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+    .form-check-label a:hover {
+        text-decoration: underline;
+    }
+    @media (max-width: 576px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+    <div class="card auth-card">
+        <div class="card-header">
+            <h1>Stwórz nowe konto</h1>
+        </div>
+        <div class="card-body">
+            <!-- POPRAWKA: Używamy obiektu form przekazanego z backendu -->
+            <form method="POST" action="{{ url_for('auth.register') }}">
+                {{ form.hidden_tag() }} <!-- DODANIE OCHRONY CSRF -->
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        {{ form.name.label }}
+                        {{ form.name(class="form-control", required=True, value=form.name.data or '') }}
+                    </div>
+                    <div class="form-group">
+                        {{ form.surname.label }}
+                        {{ form.surname(class="form-control", required=True, value=form.surname.data or '') }}
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    {{ form.email.label }}
+                    {{ form.email(class="form-control", required=True, value=form.email.data or '') }}
+                </div>
+                <div class="form-group">
+                    {{ form.agency.label }}
+                    {{ form.agency(class="form-control", required=True) }}
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        {{ form.password.label }}
+                        {{ form.password(class="form-control", id="password", required=True, minlength=8) }}
+                        <div id="password-hint" class="password-hint">
+                            Hasło musi mieć co najmniej 8 znaków.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        {{ form.confirm_password.label }}
+                        {{ form.confirm_password(class="form-control", id="confirm_password", required=True, minlength=8) }}
+                    </div>
+                </div>
+
+                <div class="form-check">
+                    {{ form.accept_tos(class="form-check-input", required=True) }}
+                    <label for="accept_tos" class="form-check-label">Akceptuję <a href="{{ url_for('main.privacy_policy') }}" target="_blank">Politykę Prywatności</a></label>
+                </div>
+                
+                <button type="submit" class="button button-primary button-full-width">Zarejestruj się</button>
+            </form>
+        </div>
+        <div class="card-footer-auth">
+            Masz już konto? <a href="{{ url_for('auth.login') }}">Zaloguj się</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('password');
+    const passwordHint = document.getElementById('password-hint');
+
+    if (passwordInput && passwordHint) {
+        passwordInput.addEventListener('focus', function() {
+            passwordHint.style.display = 'block';
+        });
+        passwordInput.addEventListener('blur', function() {
+            if (passwordInput.value === '') {
+                passwordHint.style.display = 'none';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

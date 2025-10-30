@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+
+{% block title %}Dodaj Nowe Zlecenie{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .form-card-container {
+        max-width: 700px;
+        margin: 2rem auto;
+    }
+    .card-body {
+        padding-top: 1.5rem;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--secondary-color);
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+    .form-check-label {
+        margin-bottom: 0;
+        cursor: pointer;
+    }
+    .submit-container {
+        margin-top: 2rem;
+        border-top: 1px solid var(--border-color);
+        padding-top: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-card-container">
+    <div class="card">
+        <div class="card-header">
+            <h1>Dodaj Nowe Zlecenie</h1>
+        </div>
+        <div class="card-body">
+            <!-- POPRAWKA: 'add_trip' zmienione na 'trips.add_trip' -->
+            <form method="POST" action="{{ url_for('trips.add_trip') }}">
+                <div class="form-group">
+                    <label for="title">Nazwa / Cel podróży:</label>
+                    <input type="text" id="title" name="title" class="form-control" required value="{{ form_data.get('title', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="trip_date">Data:</label>
+                    <input type="date" id="trip_date" name="trip_date" class="form-control" required value="{{ form_data.get('trip_date', '') }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="spots">Liczba miejsc:</label>
+                    <input type="number" id="spots" name="spots" class="form-control" min="0" required value="{{ form_data.get('spots', '') }}">
+                </div>
+
+                <div class="form-check">
+                    <input type="checkbox" id="is_confirmed" name="is_confirmed" class="form-check-input" {% if form_data.get('is_confirmed') %}checked{% endif %}>
+                    <label for="is_confirmed" class="form-check-label">Zlecenie potwierdzone</label>
+                </div>
+
+                <div class="submit-container">
+                    <button type="submit" class="button button-primary button-full-width">Dodaj i przejdź do szczegółów</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+
+{% block title %}Resetowanie Hasła{% endblock %}
+
+{% block extra_styles %}
+<style>
+    /* Style spójne ze stroną logowania */
+    .auth-layout {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-grow: 1;
+        padding: 2rem; /* Zwiększony margines zewnętrzny */
+    }
+    .auth-card {
+        max-width: 450px;
+        width: 100%;
+    }
+    .auth-card .card-header,
+    .auth-card .card-body {
+        padding: 2rem;
+    }
+    .card-footer-auth {
+        padding: 1.5rem 2rem;
+        background-color: var(--background-color);
+        border-top: 1px solid var(--border-color);
+        text-align: center;
+        font-size: 0.9em;
+    }
+    .card-footer-auth a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .card-footer-auth a:hover {
+        text-decoration: underline;
+    }
+    .info-text {
+        color: var(--secondary-color);
+        font-size: 0.95em;
+        margin-bottom: 2rem; /* Zwiększony margines dolny */
+        text-align: center;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-layout">
+    <div class="card auth-card">
+        <div class="card-header">
+            <h1>Zresetuj hasło</h1>
+        </div>
+        <div class="card-body">
+            <p class="info-text">Podaj adres e-mail powiązany z Twoim kontem, a wyślemy na niego link do zresetowania hasła.</p>
+            <!-- POPRAWKA: Używamy obiektu form przekazanego z backendu -->
+            <form method="POST" action="{{ url_for('auth.reset_request') }}">
+                {{ form.hidden_tag() }} <!-- DODANIE OCHRONY CSRF -->
+                
+                <div class="form-group">
+                    {{ form.email.label }}
+                    {{ form.email(class="form-control", required=True) }}
+                </div>
+                <button type="submit" class="button button-primary button-full-width">Wyślij link do resetowania</button>
+            </form>
+        </div>
+        <div class="card-footer-auth">
+            <a href="{{ url_for('auth.login') }}">Wróć do logowania</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

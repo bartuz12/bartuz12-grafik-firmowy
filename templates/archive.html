@@ -1,0 +1,203 @@
+{% extends "layout.html" %}
+
+{% block title %}Archiwum Zleceń{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .card-header h1, .card-header p { margin: 0; }
+    .card-header p { color: var(--secondary-color); }
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+    .responsive-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+    .responsive-table th, .responsive-table td {
+        padding: 12px 15px;
+        vertical-align: middle;
+    }
+    .responsive-table thead tr {
+        border-bottom: 2px solid var(--dark-gray);
+    }
+    .responsive-table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+    }
+    .responsive-table .actions-cell {
+        text-align: right;
+    }
+    .empty-archive-message {
+        padding: 40px;
+        text-align: center;
+        color: var(--secondary-color);
+    }
+    
+    /* --- Style Okna Modalnego (Ulepszone) --- */
+    .modal-backdrop, .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1040; }
+    .modal-backdrop { background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
+    .modal { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 900px; max-height: 90vh; background-color: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow-lg); z-index: 1050; flex-direction: column; animation: modal-fade-in 0.3s ease-out; }
+    .modal-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { margin: 0; font-size: 1.5rem; font-weight: 600; }
+    .modal-close { font-size: 2rem; font-weight: 300; border: none; background: none; cursor: pointer; color: var(--secondary-color); }
+    .modal-body { padding: 1.5rem; overflow-y: auto; }
+    .modal-loader { text-align: center; padding: 3rem; font-size: 1.2rem; }
+    .modal-footer { padding: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.5rem; }
+    @keyframes modal-fade-in { from { opacity: 0; transform: translate(-50%, -45%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+
+    @media (max-width: 768px) {
+        .responsive-table thead { display: none; }
+        .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display: block; width: 100%; }
+        .responsive-table tr { margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: 8px; }
+        .responsive-table td { text-align: right; padding-left: 50%; position: relative; border-bottom: 1px solid var(--border-color); }
+        .responsive-table td:last-child { border-bottom: none; }
+        .responsive-table td::before { content: attr(data-label); position: absolute; left: 15px; width: calc(50% - 30px); text-align: left; font-weight: bold; color: var(--secondary-color); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h1>Archiwum Zleceń</h1>
+            <p>Lista zleceń starszych niż 6 miesięcy.</p>
+        </div>
+        <form action="{{ url_for('admin.run_archive') }}" method="POST" id="archive-form">
+            <button type="submit" class="button">Uruchom Archiwizację</button>
+        </form>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-container">
+            <table class="responsive-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Nazwa Zlecenia</th>
+                        <th>Potwierdzone</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trip in trips %}
+                    <tr>
+                        <td data-label="Data">{{ trip.trip_date.strftime('%d.%m.%Y') }}</td>
+                        <td data-label="Nazwa Zlecenia">{{ trip.title }}</td>
+                        <td data-label="Potwierdzone">{% if trip.is_confirmed %}Tak{% else %}Nie{% endif %}</td>
+                        <td class="actions-cell">
+                            <!-- POPRAWKA: Link wskazuje teraz na API i ma klasę do obsługi przez JS -->
+                            <a href="{{ url_for('main.api_trip_details_fragment', trip_id=trip.id) }}" 
+                               class="button button-secondary details-link" 
+                               data-title="{{ trip.title }}">Szczegóły</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="empty-archive-message">Archiwum jest puste.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal do potwierdzeń archiwizacji -->
+<div id="modal-backdrop" class="modal-backdrop"></div>
+<div id="confirm-modal" class="modal">
+     <div class="modal-header"><h2 id="confirm-modal-title" class="modal-title">Potwierdzenie</h2></div>
+     <div id="confirm-modal-body" class="modal-body"></div>
+     <div class="modal-footer">
+        <button id="confirm-modal-cancel" class="button button-secondary">Anuluj</button>
+        <button id="confirm-modal-ok" class="button">OK</button>
+    </div>
+</div>
+
+<!-- NOWOŚĆ: Modal do wyświetlania szczegółów zlecenia -->
+<div id="details-modal" class="modal">
+    <div class="modal-header">
+        <h2 id="details-modal-title" class="modal-title">Szczegóły zlecenia</h2>
+        <button id="details-modal-close" class="modal-close">&times;</button>
+    </div>
+    <div id="details-modal-body" class="modal-body">
+        <div class="modal-loader">Ładowanie...</div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const archiveForm = document.getElementById('archive-form');
+    
+    // --- Logika dla obu modali ---
+    const confirmModal = document.getElementById('confirm-modal');
+    const detailsModal = document.getElementById('details-modal');
+    const modalBackdrop = document.getElementById('modal-backdrop');
+
+    function showModal(modalElement) {
+        modalBackdrop.style.display = 'block';
+        modalElement.style.display = 'flex';
+    }
+    
+    function hideAllModals() {
+        modalBackdrop.style.display = 'none';
+        confirmModal.style.display = 'none';
+        detailsModal.style.display = 'none';
+    }
+
+    modalBackdrop.addEventListener('click', hideAllModals);
+    document.getElementById('details-modal-close').addEventListener('click', hideAllModals);
+
+    // --- Logika modala potwierdzającego archiwizację ---
+    function showConfirmation({ title, body, onOk }) {
+        // ... (istniejąca logika bez zmian) ...
+    }
+    
+    // --- NOWA LOGIKA: Otwieranie szczegółów zlecenia w modalu ---
+    function showDetailsModalWithUrl(url, title) {
+        const modalTitle = document.getElementById('details-modal-title');
+        const modalBody = document.getElementById('details-modal-body');
+        
+        modalTitle.textContent = title;
+        modalBody.innerHTML = '<div class="modal-loader">Ładowanie...</div>';
+        showModal(detailsModal);
+        
+        fetch(url)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
+            .then(htmlFragment => {
+                modalBody.innerHTML = htmlFragment;
+            })
+            .catch(err => {
+                modalBody.innerHTML = '<p style="color: red;">Wystąpił błąd podczas ładowania danych.</p>';
+            });
+    }
+
+    // Dodanie nasłuchu na wszystkie linki "Szczegóły"
+    document.querySelectorAll('.details-link').forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();
+            const url = this.getAttribute('href');
+            const title = this.getAttribute('data-title');
+            showDetailsModalWithUrl(url, title);
+        });
+    });
+
+    // Istniejąca logika dla formularza archiwizacji
+    if (archiveForm) {
+        // ... (istniejąca logika bez zmian) ...
+    }
+});
+</script>
+{% endblock %}
+

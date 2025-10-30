@@ -1,0 +1,135 @@
+{# 
+    Ten plik jest "fragmentem" - zawiera tylko kod HTML, który ma być wstrzyknięty 
+    do okna modalnego. Nie jest to pełna strona i nie dziedziczy z layout.html.
+    Zawiera własne style i skrypty, aby działać niezależnie.
+#}
+
+<style>
+    /* Style dla tego fragmentu */
+    .details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .detail-item { background-color: var(--background-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color); }
+    .detail-item strong { display: block; margin-bottom: 0.5rem; color: var(--secondary-color); font-size: 0.9em; }
+    .detail-item span { font-size: 1.1em; font-weight: 500; }
+    .actions-panel, .management-panel { background-color: var(--background-color); padding: 1.5rem; border-radius: 8px; margin-top: 2rem; border: 1px solid var(--border-color); }
+    .actions-panel h3, .management-panel h3 { margin-top: 0; }
+    .attendees-section h2 { margin-top: 2.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); }
+    .attendees-list { list-style: none; padding: 0; }
+    .attendees-list li { display: flex; justify-content: space-between; align-items: center; background-color: var(--background-color); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; }
+    .attendees-list .status { font-style: italic; color: var(--secondary-color); font-size: 0.9em; margin-left: 0.5rem; }
+    .empty-list-info { padding: 1rem; text-align: center; color: var(--secondary-color); background-color: var(--background-color); border-radius: 6px; }
+    .reservation-warning { background-color: color-mix(in srgb, var(--primary-color) 15%, transparent); padding: 1rem; border-radius: 8px; border-left: 4px solid var(--primary-color); margin: 1.5rem 0; }
+    .management-actions-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem; }
+    .form-check { display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; }
+    #spots-range-value-frag { font-weight: bold; color: var(--primary-color); }
+</style>
+
+<!-- SEKCJA WIDOCZNA DLA WSZYSTKICH -->
+<div class="details-grid">
+    <div class="detail-item"><strong>Zapisane osoby:</strong> <span>{{ signups | selectattr('status', 'in', ['potwierdzony', 'wstępnie zapisany']) | list | length }} / {{ trip.spots or 'N/A' }}</span></div>
+    {% if is_past_trip %}
+        <div class="detail-item"><strong>Godziny pracy:</strong> <span>{{ trip.work_start_time.strftime('%H:%M') if trip.work_start_time else 'Nie podano' }} - {{ trip.work_end_time.strftime('%H:%M') if trip.work_end_time else 'Nie podano' }}</span></div>
+        <div class="detail-item"><strong>Kilometry:</strong> <span>{{ trip.kilometers if trip.kilometers is not none else 'Nie podano' }}</span></div>
+    {% else %}
+        <div class="detail-item"><strong>Start pracy:</strong> <span>{{ trip.start_time.strftime('%H:%M') if trip.start_time else 'Do ustalenia' }}</span></div>
+        <div class="detail-item"><strong>Wyjazd:</strong> <span>{{ trip.departure_time.strftime('%H:%M') if trip.departure_time else 'Do ustalenia' }}</span></div>
+    {% endif %}
+</div>
+{% if trip.notes %}
+    <div class="detail-item" style="grid-column: 1 / -1;"><strong>Dodatkowe informacje:</strong><br>{{ trip.notes | nl2br }}</div>
+{% endif %}
+
+<!-- SEKCJA AKCJI DLA PRACOWNIKÓW -->
+{% if not is_past_trip and current_user.status in ['pracownik', 'złoty pracownik'] %}
+<div class="actions-panel">
+    <h3>Twoje działania</h3>
+    <form method="POST" action="{{ url_for('trips.signup_trip', trip_id=trip.id) }}">
+        {% if user_signup %}
+            <p>Twój aktualny status: <strong>{{ user_signup.status }}</strong></p>
+            {% if user_signup.status == 'wstępnie zapisany' %}
+                <div class="reservation-warning"><strong>Jesteś wstępnie zapisany/a.</strong> Potwierdź swój udział lub zrezygnuj.</div>
+                <button type="submit" name="action" value="confirm" class="button button-success">Potwierdź</button>
+                <button type="submit" name="action" value="cancel" class="button button-danger">Zrezygnuj</button>
+            {% elif user_signup.status in ['potwierdzony', 'rezerwowy'] %}
+                 <button type="submit" name="action" value="cancel" class="button button-danger">Zrezygnuj</button>
+            {% elif user_signup.status == 'niedyspozycyjny' %}
+                <p>Zgłoszono niedyspozycję. Możesz zmienić zdanie i zrezygnować z niedyspozycji.</p>
+                <button type="submit" name="action" value="cancel" class="button button-secondary">Zrezygnuj z niedyspozycji</button>
+            {% endif %}
+        {% else %}
+            <button type="submit" name="action" value="signup" class="button button-primary">Zapisz się</button>
+            <button type="submit" name="action" value="decline" class="button button-secondary">Odmów (niedyspozycja)</button>
+        {% endif %}
+    </form>
+</div>
+{% endif %}
+
+<!-- SEKCJA ZARZĄDZANIA DLA ADMINA/KIEROWNIKA -->
+{% if current_user.status in ['admin', 'kierownik'] %}
+<div class="management-panel">
+    <h3>Panel Zarządzania</h3>
+    <!-- POPRAWKA: Dodano klasę 'details-form', aby JavaScript mógł przechwycić ten formularz -->
+    <form method="POST" action="{{ url_for('trips.edit_trip', trip_id=trip.id) }}" class="details-form">
+        
+        {% if not is_past_trip %}
+        <div class="details-grid">
+            <div class="form-group"><label for="start_time-frag">Godzina rozpoczęcia:</label><input type="time" id="start_time-frag" name="start_time" class="form-control" value="{{ trip.start_time.strftime('%H:%M') if trip.start_time }}"></div>
+            <div class="form-group"><label for="departure_time-frag">Godzina wyjazdu:</label><input type="time" id="departure_time-frag" name="departure_time" class="form-control" value="{{ trip.departure_time.strftime('%H:%M') if trip.departure_time }}"></div>
+            <div class="form-group">
+                <label for="spots-frag">Liczba miejsc: <span id="spots-range-value-frag">{{ trip.spots or 1 }}</span></label>
+                <input type="range" id="spots-frag" name="spots" class="form-control" min="1" max="7" value="{{ trip.spots or 1 }}" oninput="document.getElementById('spots-range-value-frag').textContent = this.value;">
+            </div>
+        </div>
+        {% else %}
+        <div class="details-grid">
+             <div class="form-group"><label for="work_start_time-frag">Godz. rozpoczęcia (faktyczna):</label><input type="time" id="work_start_time-frag" name="work_start_time" class="form-control" value="{{ trip.work_start_time.strftime('%H:%M') if trip.work_start_time }}"></div>
+            <div class="form-group"><label for="work_end_time-frag">Godz. zakończenia (faktyczna):</label><input type="time" id="work_end_time-frag" name="work_end_time" class="form-control" value="{{ trip.work_end_time.strftime('%H:%M') if trip.work_end_time }}"></div>
+            <div class="form-group"><label for="kilometers-frag">Przejechane kilometry:</label><input type="number" step="0.1" id="kilometers-frag" name="kilometers" class="form-control" value="{{ trip.kilometers or '' }}"></div>
+        </div>
+        {% endif %}
+
+        <div class="form-group"><label for="notes-frag">Notatki (widoczne dla pracowników):</label><textarea id="notes-frag" name="notes" class="form-control" rows="3">{{ trip.notes or '' }}</textarea></div>
+        <div class="form-check"><input type="checkbox" id="is_confirmed-frag" name="is_confirmed" class="form-check-input" {% if trip.is_confirmed %}checked{% endif %}><label for="is_confirmed-frag">Wyjazd potwierdzony</label></div>
+        {% if is_past_trip %}<div class="form-check"><input type="checkbox" id="manager_was_passenger-frag" name="manager_was_passenger" class="form-check-input" {% if trip.manager_was_passenger %}checked{% endif %}><label for="manager_was_passenger-frag">Byłem pasażerem</label></div>{% endif %}
+        
+        <button type="submit" class="button button-primary" style="margin-top: 1rem;">Zapisz zmiany</button>
+    </form>
+    
+    <div class="management-actions-footer">
+        <form method="POST" action="{{ url_for('trips.delete_trip', trip_id=trip.id) }}" id="delete-form-fragment"><button type="submit" class="button button-danger">Usuń Zlecenie</button></form>
+        {% if signups | selectattr('status', 'in', ['potwierdzony', 'wstępnie zapisany']) | list | length > 0 %}<form method="POST" action="{{ url_for('trips.send_to_office', trip_id=trip.id) }}"><button type="submit" class="button button-success">Wyślij listę do biura</button></form>{% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Lista Uczestników -->
+<div class="attendees-section">
+    <h2>Zapisane osoby</h2>
+    {% if signups %}
+        <ul class="attendees-list">
+        {% for signup in signups %}
+            <li>
+                <span><strong>{{ signup.user.name }} {{ signup.user.surname }}</strong> ({{ signup.user.agency }})</span>
+                <span class="status">{{ signup.status }}</span>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-list-info">Brak zapisanych osób.</p>
+    {% endif %}
+</div>
+
+<script>
+(function() {
+    const deleteForm = document.getElementById('delete-form-fragment');
+    if (deleteForm) {
+        deleteForm.addEventListener('submit', function (event) {
+            // Używamy natywnego `confirm`, ponieważ ten fragment nie ma dostępu
+            // do niestandardowego modala zdefiniowanego na stronie nadrzędnej.
+            if (!confirm('Czy na pewno chcesz trwale usunąć to zlecenie? Tej operacji nie można cofnąć.')) {
+                event.preventDefault();
+            }
+        });
+    }
+})();
+</script>
+

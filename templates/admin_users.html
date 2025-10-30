@@ -1,0 +1,157 @@
+{% extends "layout.html" %}
+
+{% block title %}Zarządzaj Użytkownikami{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .search-container {
+        padding: 0 1.5rem 1.5rem;
+    }
+    #user-search {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background-color: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1rem;
+    }
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+    .responsive-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+    .responsive-table th,
+    .responsive-table td {
+        padding: 12px 15px;
+        vertical-align: middle;
+    }
+    .responsive-table thead tr {
+        border-bottom: 2px solid var(--dark-gray);
+    }
+    .responsive-table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+    }
+    .status-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 250px;
+    }
+    .status-form select {
+        flex-grow: 1;
+    }
+    @media (max-width: 992px) {
+        .responsive-table thead { display: none; }
+        .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
+            display: block;
+            width: 100%;
+        }
+        .responsive-table tr {
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .responsive-table td {
+            text-align: right;
+            padding-left: 50%;
+            position: relative;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .responsive-table td:last-child { border-bottom: none; }
+        .responsive-table td::before {
+            content: attr(data-label);
+            position: absolute;
+            left: 15px;
+            width: calc(50% - 30px);
+            text-align: left;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1>Zarządzaj użytkownikami</h1>
+    </div>
+    
+    <div class="card-body">
+        <div class="search-container">
+            <input type="text" id="user-search" class="form-control" placeholder="Wyszukaj po imieniu, nazwisku, emailu lub agencji...">
+        </div>
+
+        <div class="table-container">
+            <table id="user-table" class="responsive-table">
+                <thead>
+                    <tr>
+                        <th>Imię i Nazwisko</th>
+                        <th>Email</th>
+                        <th>Agencja</th>
+                        <th>Status</th>
+                        <th>Akcje</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td data-label="Imię i Nazwisko">{{ user.name }} {{ user.surname }}</td>
+                        <td data-label="Email">{{ user.email }}</td>
+                        <td data-label="Agencja">{{ user.agency }}</td>
+                        <td data-label="Status"><strong>{{ user.status }}</strong></td>
+                        <td data-label="Akcje">
+                            <!-- POPRAWKA: 'set_user_status' zmienione na 'admin.set_user_status' -->
+                            <form method="POST" action="{{ url_for('admin.set_user_status', user_id=user.id) }}" class="status-form">
+                                <select name="status" class="form-control">
+                                    <option value="pracownik" {% if user.status == 'pracownik' %}selected{% endif %}>Pracownik</option>
+                                    <option value="złoty pracownik" {% if user.status == 'złoty pracownik' %}selected{% endif %}>Złoty Pracownik</option>
+                                    <option value="kierownik" {% if user.status == 'kierownik' %}selected{% endif %}>Kierownik</option>
+                                    <option value="admin" {% if user.status == 'admin' %}selected{% endif %}>Admin</option>
+                                    <option value="zablokowany" {% if user.status == 'zablokowany' %}selected{% endif %}>Zablokowany</option>
+                                </select>
+                                <button type="submit" class="button">Zapisz</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 2rem;">Nie znaleziono żadnych użytkowników.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('user-search');
+    const userTable = document.getElementById('user-table');
+    const rows = userTable.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+    searchInput.addEventListener('keyup', function() {
+        const filterText = searchInput.value.toLowerCase();
+        
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const rowText = row.textContent.toLowerCase();
+            
+            if (rowText.includes(filterText)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
