@@ -1,0 +1,72 @@
+/* --- Style ogólne --- */
+#calendar { margin: 20px auto; }
+.welcome-message { text-align: center; margin-bottom: 20px; }
+.admin-actions { display: flex; justify-content: flex-end; gap: 1rem; max-width: 1100px; margin: 0 auto 20px; }
+
+/* --- Legenda Kalendarza --- */
+.calendar-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 25px; margin-top: 25px; padding: 15px; font-size: 0.9em; background-color: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); max-width: 1100px; margin-left: auto; margin-right: auto; }
+.legend-item { display: flex; align-items: center; }
+.legend-color-box { width: 15px; height: 15px; border-radius: 3px; margin-right: 8px; }
+
+/* --- Style wydarzeń w kalendarzu (FullCalendar) --- */
+.fc-event, .fc-list-event { cursor: pointer; border: none !important; }
+.new-event-indicator { display: inline-block; width: 10px; height: 10px; background-color: var(--primary-color, #e74c3c); border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+.fc-list-event-time { display: none; }
+/* Globalne zawijanie tekstu dla wszystkich widoków */
+.fc-daygrid-event .fc-event-title, 
+.fc-list-event .fc-list-item-title a,
+.fc-timegrid-event .fc-event-main { 
+    white-space: normal !important; 
+    overflow-wrap: break-word !important;
+}
+
+/* --- Rozwijany panel (tylko podgląd) w widoku listy --- */
+.fc-list-item-title { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.fc-list-item-title a { text-decoration: none; color: inherit; font-weight: 500; }
+.details-toggle { background: none; border: 1px solid var(--border-color); border-radius: 50%; width: 30px; height: 30px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s, background-color 0.2s; color: var(--secondary-color); margin-left: 1rem; flex-shrink: 0; }
+.details-toggle:hover { background-color: var(--background-color); }
+.details-toggle.active { transform: rotate(180deg); }
+.list-event-details { display: none; padding: 1rem; margin-top: 1rem; background-color: var(--background-color); border-top: 1px solid var(--border-color); }
+
+/* --- Czytelny widok szczegółów w liście --- */
+.improved-details {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+.detail-box {
+    background-color: var(--card-bg);
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    flex-grow: 1;
+    min-width: 150px;
+    box-shadow: var(--shadow-sm);
+}
+.detail-box-label {
+    display: block;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--secondary-color);
+    margin-bottom: 0.3rem;
+    text-transform: uppercase;
+}
+.detail-box-value {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+/* Usunięto style .details-form, .form-check-inline, ponieważ nie ma edycji w liście */
+
+/* --- Style Okna Modalnego --- */
+.modal-backdrop, .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1040; }
+.modal-backdrop { background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(5px); }
+.modal { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 900px; max-height: 90vh; background-color: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow-lg); z-index: 1050; flex-direction: column; }
+.modal-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+.modal-title { margin: 0; font-size: 1.5rem; font-weight: 600; }
+.modal-close { font-size: 2rem; border: none; background: none; cursor: pointer; color: var(--secondary-color); }
+.modal-body { padding: 1.5rem; overflow-y: auto; }
+.modal-loader { text-align: center; padding: 3rem; font-size: 1.2rem; }
+.modal-footer { padding: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 0.5rem; }
+
