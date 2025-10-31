@@ -28,7 +28,7 @@ def create_app(config_class=Config):
     login_manager.init_app(app)
     mail.init_app(app)
     csrf.init_app(app)
-    rq.init_app(app)
+    #rq.init_app(app)
     migrate.init_app(app, db) # Potrzebne do migracji bazy danych
 
     # --- 2. REJESTRACJA FUNKCJI W JINJA ---
@@ -95,3 +95,4 @@ if __name__ == '__main__':
     # Ta sekcja zostanie usunięta na produkcji (Audyt 2.4)
     app = create_app()
     app.run(debug=True, host='0.0.0.0', port=5001)
+
