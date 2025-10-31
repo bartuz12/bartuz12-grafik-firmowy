@@ -1,8 +1,8 @@
-# Używamy oficjalnego, lekkiego obrazu Pythona
 FROM python:3.11-slim
 
 # --- KRYTYCZNA POPRAWKA DLA "Build failed" ---
 # Instalujemy narzędzia systemowe (build-essential) potrzebne do kompilacji np. "pandas"
+# Poprawka: Łączymy komendy RUN w jeden blok za pomocą '\'
 RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential && \
     rm -rf /var/lib/apt/lists/*
@@ -21,5 +21,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Kopiujemy cały kod projektu
 COPY . .
 
-# ✅ OSTATECZNA POPRAWKA — usunięto "\" przed $PORT
+# ✅ OSTATECZNA POPRAWKA — usunięto błędny '\' przed $PORT
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 aplikacja:create_app
