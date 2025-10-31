@@ -21,6 +21,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Kopiujemy cały kod projektu
 COPY . .
 
-# Polecenie uruchamiające serwer Gunicorn
 # ✅ OSTATECZNA POPRAWKA — usunięto "\" przed $PORT
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 aplikacja:create_app
